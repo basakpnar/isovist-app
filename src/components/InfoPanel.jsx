@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { computeEffectiveParams } from '../viewerParams';
 import { heatmapColor, publicSpaceColor } from '../heatmap';
 
@@ -58,7 +58,10 @@ export function InfoPanel({ viewerParams, hasOrigin }) {
       {/* ── Interaction heatmap legend ── */}
       <div style={S.sectionHeader} onClick={() => setHeatmapOpen(!heatmapOpen)}>
         <span style={S.legendLabel}>INTERACTION HEATMAP</span>
-        <span style={{ ...S.chevron, transform: heatmapOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
+        <div style={S.headerRight}>
+          <InfoTip text="Buildings are scored by use type × proximity. Commercial (×2.5) and office (×2.0) buildings score highest; residential (×1.2) the lowest. Score fades to zero at 300 m from the viewer." />
+          <span style={{ ...S.chevron, transform: heatmapOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
+        </div>
       </div>
 
       {heatmapOpen && (
@@ -88,7 +91,10 @@ export function InfoPanel({ viewerParams, hasOrigin }) {
       {/* ── Public spaces legend ── */}
       <div style={S.sectionHeader} onClick={() => setSpacesOpen(!spacesOpen)}>
         <span style={S.legendLabel}>PUBLIC SPACES</span>
-        <span style={{ ...S.chevron, transform: spacesOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
+        <div style={S.headerRight}>
+          <InfoTip text="Parks, squares and gardens are coloured by proximity to the viewer. Hot pink means close and easy to reach; deep purple means far away. Proximity is normalised over a 300 m radius." />
+          <span style={{ ...S.chevron, transform: spacesOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
+        </div>
       </div>
 
       {spacesOpen && (
@@ -109,6 +115,25 @@ export function InfoPanel({ viewerParams, hasOrigin }) {
           </div>
           <div style={S.spaceNote}>Parks · Squares · Gardens</div>
         </>
+      )}
+    </div>
+  );
+}
+
+function InfoTip({ text }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+  return (
+    <div
+      ref={ref}
+      style={S.infoWrap}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span style={S.infoIcon}>ⓘ</span>
+      {visible && (
+        <div style={S.infoTooltip}>{text}</div>
       )}
     </div>
   );
@@ -197,6 +222,40 @@ const S = {
     marginBottom: 6,
     cursor: 'pointer',
     pointerEvents: 'all',
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    pointerEvents: 'all',
+  },
+  infoIcon: {
+    fontSize: 11,
+    color: '#444',
+    cursor: 'default',
+    lineHeight: 1,
+    userSelect: 'none',
+  },
+  infoTooltip: {
+    position: 'absolute',
+    bottom: 'calc(100% + 8px)',
+    right: 0,
+    width: 220,
+    background: 'rgba(8,8,18,0.96)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 7,
+    padding: '8px 10px',
+    fontSize: 10,
+    color: '#aaa',
+    lineHeight: 1.55,
+    pointerEvents: 'none',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+    zIndex: 20,
   },
   legendLabel: {
     fontSize: 9,
