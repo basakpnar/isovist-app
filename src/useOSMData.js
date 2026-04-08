@@ -90,7 +90,7 @@ export function useOSMData() {
   useEffect(() => {
     let cancelled = false;
 
-    fetch('/weimar-osm.json')
+    fetch(`${import.meta.env.BASE_URL}weimar-osm.json`)
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to load data file (HTTP ${r.status})`);
         return r.json();
