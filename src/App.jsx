@@ -13,6 +13,8 @@ export default function App() {
   const [settings, setSettings]         = useState(getDefaultSettings);
   const [viewerParams, setViewerParams] = useState(DEFAULT_VIEWER_PARAMS);
   const [origin, setOrigin]             = useState(null);
+  const [showHeatmap, setShowHeatmap]   = useState(true);
+  const [showSpaces,  setShowSpaces]    = useState(true);
   const glRef = useRef(null);
 
   // Restore state from a shared link on first load
@@ -49,6 +51,8 @@ export default function App() {
         viewerParams={viewerParams}
         glRef={glRef}
         onOriginChange={setOrigin}
+        showHeatmap={showHeatmap}
+        showSpaces={showSpaces}
       />
 
       <div style={styles.panels}>
@@ -58,7 +62,14 @@ export default function App() {
 
       <ExportPanel settings={settings} viewerParams={viewerParams} glRef={glRef} />
 
-      <InfoPanel viewerParams={viewerParams} hasOrigin={!!origin} />
+      <InfoPanel
+        viewerParams={viewerParams}
+        hasOrigin={!!origin}
+        showHeatmap={showHeatmap}
+        showSpaces={showSpaces}
+        onToggleHeatmap={() => setShowHeatmap(v => !v)}
+        onToggleSpaces={() => setShowSpaces(v => !v)}
+      />
 
       <div style={styles.title}>
         <div style={styles.titleMain}>PROXIVIST</div>

@@ -24,7 +24,7 @@ const SPACES_GRADIENT =
   ' rgb(192,38,211) 65%,' +
   ' rgb(255,45,120) 100%)';
 
-export function InfoPanel({ viewerParams, hasOrigin }) {
+export function InfoPanel({ viewerParams, hasOrigin, showHeatmap, showSpaces, onToggleHeatmap, onToggleSpaces }) {
   const ep = computeEffectiveParams(viewerParams);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
   const [spacesOpen,  setSpacesOpen]  = useState(true);
@@ -57,9 +57,10 @@ export function InfoPanel({ viewerParams, hasOrigin }) {
 
       {/* ── Interaction heatmap legend ── */}
       <div style={S.sectionHeader} onClick={() => setHeatmapOpen(!heatmapOpen)}>
-        <span style={S.legendLabel}>INTERACTION HEATMAP</span>
+        <span style={{ ...S.legendLabel, opacity: showHeatmap ? 1 : 0.35 }}>INTERACTION HEATMAP</span>
         <div style={S.headerRight}>
           <InfoTip text="Buildings are scored by use type × proximity. Commercial (×2.5) and office (×2.0) buildings score highest; residential (×1.2) the lowest. Score fades to zero at 300 m from the viewer." />
+          <Toggle on={showHeatmap} onToggle={onToggleHeatmap} />
           <span style={{ ...S.chevron, transform: heatmapOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
         </div>
       </div>
@@ -90,9 +91,10 @@ export function InfoPanel({ viewerParams, hasOrigin }) {
 
       {/* ── Public spaces legend ── */}
       <div style={S.sectionHeader} onClick={() => setSpacesOpen(!spacesOpen)}>
-        <span style={S.legendLabel}>PUBLIC SPACES</span>
+        <span style={{ ...S.legendLabel, opacity: showSpaces ? 1 : 0.35 }}>PUBLIC SPACES</span>
         <div style={S.headerRight}>
           <InfoTip text="Parks, squares and gardens are coloured by proximity to the viewer. Hot pink means close and easy to reach; deep purple means far away. Proximity is normalised over a 300 m radius." />
+          <Toggle on={showSpaces} onToggle={onToggleSpaces} />
           <span style={{ ...S.chevron, transform: spacesOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
         </div>
       </div>
@@ -116,6 +118,17 @@ export function InfoPanel({ viewerParams, hasOrigin }) {
           <div style={S.spaceNote}>Parks · Squares · Gardens</div>
         </>
       )}
+    </div>
+  );
+}
+
+function Toggle({ on, onToggle }) {
+  return (
+    <div
+      style={{ ...S.toggleTrack, background: on ? 'rgba(100,160,255,0.35)' : 'rgba(255,255,255,0.08)' }}
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
+    >
+      <div style={{ ...S.toggleThumb, transform: on ? 'translateX(12px)' : 'translateX(1px)' }} />
     </div>
   );
 }
@@ -227,6 +240,26 @@ const S = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
+  },
+  toggleTrack: {
+    width: 26,
+    height: 14,
+    borderRadius: 7,
+    border: '1px solid rgba(255,255,255,0.12)',
+    cursor: 'pointer',
+    flexShrink: 0,
+    position: 'relative',
+    transition: 'background 0.2s',
+    pointerEvents: 'all',
+  },
+  toggleThumb: {
+    position: 'absolute',
+    top: 1,
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    background: '#fff',
+    transition: 'transform 0.2s',
   },
   infoWrap: {
     position: 'relative',
