@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
+import { NorthArrow, NorthArrowUpdater } from './NorthArrow';
 
 // Exposes the Three.js renderer to the parent via a ref, for screenshots
 function GlCapture({ glRef }) {
@@ -80,7 +81,8 @@ export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, 
 
   const [isovistState, setIsovistState] = useState(null);
   const [origin, setOrigin]             = useState(null);
-  const controlsRef = useRef();
+  const controlsRef  = useRef();
+  const northArrowRef = useRef();
 
   const recompute = useCallback((x, geoZ) => {
     const ep = computeEffectiveParams(viewerParams);
@@ -116,6 +118,7 @@ export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, 
   }, [recompute, onOriginChange]);
 
   return (
+    <>
     <Canvas
       shadows={viewMode === 'shaded'}
       camera={{ position: [0, 400, 400], fov: 45, near: 1, far: 5000 }}
@@ -123,6 +126,7 @@ export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, 
       gl={{ preserveDrawingBuffer: true }}
     >
       <GlCapture glRef={glRef} />
+      <NorthArrowUpdater arrowRef={northArrowRef} />
       <CameraController viewMode={viewMode} />
       <Lighting viewMode={viewMode} />
 
@@ -153,5 +157,7 @@ export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, 
         <GizmoViewport axisColors={['#ff4060', '#20df80', '#4080ff']} labelColor="white" />
       </GizmoHelper>
     </Canvas>
+    <NorthArrow ref={northArrowRef} />
+    </>
   );
 }
