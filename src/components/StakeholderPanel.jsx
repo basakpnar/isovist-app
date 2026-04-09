@@ -132,7 +132,7 @@ const S = {
     fontFamily: 'system-ui, sans-serif',
     fontSize: 11,
     color: '#ccc',
-    pointerEvents: 'none',
+    pointerEvents: 'auto',
     zIndex: 10,
     minWidth: 500,
   },
