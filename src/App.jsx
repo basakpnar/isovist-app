@@ -5,6 +5,7 @@ import { ControlPanel, getDefaultSettings } from './components/ControlPanel';
 import { ViewerParamsPanel } from './components/ViewerParamsPanel';
 import { ExportPanel, decodeShareHash } from './components/ExportPanel';
 import { InfoPanel } from './components/InfoPanel';
+import { RoleSelector, ROLES } from './components/RoleSelector';
 import { DEFAULT_VIEWER_PARAMS } from './viewerParams';
 import './index.css';
 
@@ -13,14 +14,23 @@ export default function App() {
   const [settings, setSettings]         = useState(getDefaultSettings);
   const [viewerParams, setViewerParams] = useState(DEFAULT_VIEWER_PARAMS);
   const [origin, setOrigin]             = useState(null);
+  const [role, setRole]                 = useState(null);   // null = selector screen
+  const glRef = useRef(null);
+
+  const roleMeta = ROLES.find(r => r.id === role);
+
+  // Heatmap & spaces are only active for roles that show them
+  const canHeatmap = role === 'designer' || role === 'stakeholder';
+  const canSpaces  = role === 'designer' || role === 'stakeholder';
   const [showHeatmap, setShowHeatmap]   = useState(true);
   const [showSpaces,  setShowSpaces]    = useState(true);
-  const glRef = useRef(null);
 
   // Restore state from a shared link on first load
   useEffect(() => {
     decodeShareHash(window.location.hash, setSettings, setViewerParams);
   }, []);
+
+  if (!role) return <RoleSelector onSelect={setRole} />;
 
   if (error) {
     return (
@@ -51,16 +61,17 @@ export default function App() {
         viewerParams={viewerParams}
         glRef={glRef}
         onOriginChange={setOrigin}
-        showHeatmap={showHeatmap}
-        showSpaces={showSpaces}
+        showHeatmap={canHeatmap && showHeatmap}
+        showSpaces={canSpaces && showSpaces}
       />
 
+      {/* Right-side panels — designer sees all; stakeholder sees view controls; observer sees neither */}
       <div style={styles.panels}>
-        <ViewerParamsPanel params={viewerParams} onChange={setViewerParams} />
-        <ControlPanel settings={settings} onChange={setSettings} />
+        {role === 'designer' && <ViewerParamsPanel params={viewerParams} onChange={setViewerParams} />}
+        {(role === 'designer' || role === 'stakeholder') && <ControlPanel settings={settings} onChange={setSettings} />}
       </div>
 
-      <ExportPanel settings={settings} viewerParams={viewerParams} glRef={glRef} />
+      {role === 'designer' && <ExportPanel settings={settings} viewerParams={viewerParams} glRef={glRef} />}
 
       <InfoPanel
         viewerParams={viewerParams}
@@ -69,12 +80,22 @@ export default function App() {
         showSpaces={showSpaces}
         onToggleHeatmap={() => setShowHeatmap(v => !v)}
         onToggleSpaces={() => setShowSpaces(v => !v)}
+        role={role}
       />
 
       <div style={styles.title}>
         <div style={styles.titleMain}>PROXIVIST</div>
         <div style={styles.titleSub}>Isovist · Visibility · Land Use &amp; Function · Weimar</div>
         <div style={styles.titleMeta}>2 × 2 km · OSM</div>
+        {/* Role badge + switch */}
+        <div style={styles.roleBadgeRow}>
+          <span style={{ ...styles.roleBadge, borderColor: roleMeta.accent + '66', color: roleMeta.accent }}>
+            {roleMeta.label.toUpperCase()}
+          </span>
+          <button style={styles.switchBtn} onClick={() => { setRole(null); setOrigin(null); }}>
+            Switch role
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -142,5 +163,31 @@ const styles = {
     color: '#445',
     marginTop: 3,
     letterSpacing: '0.06em',
+  },
+  roleBadgeRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  roleBadge: {
+    fontSize: 8,
+    letterSpacing: '0.14em',
+    border: '1px solid',
+    borderRadius: 4,
+    padding: '2px 6px',
+    fontFamily: 'system-ui, sans-serif',
+  },
+  switchBtn: {
+    fontSize: 9,
+    color: '#556',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+    letterSpacing: '0.06em',
+    textDecoration: 'underline',
+    fontFamily: 'system-ui, sans-serif',
+    pointerEvents: 'all',
   },
 };

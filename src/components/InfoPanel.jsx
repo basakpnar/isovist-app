@@ -24,10 +24,15 @@ const SPACES_GRADIENT =
   ' rgb(192,38,211) 65%,' +
   ' rgb(255,45,120) 100%)';
 
-export function InfoPanel({ viewerParams, hasOrigin, showHeatmap, showSpaces, onToggleHeatmap, onToggleSpaces }) {
+export function InfoPanel({ viewerParams, hasOrigin, showHeatmap, showSpaces, onToggleHeatmap, onToggleSpaces, role = 'designer' }) {
   const ep = computeEffectiveParams(viewerParams);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
   const [spacesOpen,  setSpacesOpen]  = useState(true);
+
+  // Which sections each role can see
+  const showParams  = role === 'designer' || role === 'observer';
+  const showHeatmapSection = role === 'designer' || role === 'stakeholder';
+  const showSpacesSection  = role === 'designer' || role === 'stakeholder';
 
   if (!hasOrigin) {
     return (
@@ -44,78 +49,89 @@ export function InfoPanel({ viewerParams, hasOrigin, showHeatmap, showSpaces, on
 
   return (
     <div style={S.panel}>
-      {/* ── Parameter chips ── */}
-      <div style={S.paramRow}>
-        <Chip label="FOV"        value={ep.isDirectional ? `${ep.fovH.toFixed(0)}°` : '360°'} />
-        <Chip label="Range"      value={`${ep.range.toFixed(0)} m`} />
-        <Chip label="Acuity"     value={`${Math.round(ep.numRays / 7.2)}%`} />
-        <Chip label="Peripheral" value={`${ep.peripheralAngle.toFixed(0)}°`} />
-        <Chip label="Light"      value={viewerParams.vision.lightSensitivity.value} />
-      </div>
-
-      <div style={S.divider} />
-
-      {/* ── Interaction heatmap legend ── */}
-      <div style={S.sectionHeader} onClick={() => setHeatmapOpen(!heatmapOpen)}>
-        <span style={{ ...S.legendLabel, opacity: showHeatmap ? 1 : 0.35 }}>INTERACTION HEATMAP</span>
-        <div style={S.headerRight}>
-          <InfoTip text="Buildings are scored by use type × proximity. Commercial (×2.5) and office (×2.0) buildings score highest; residential (×1.2) the lowest. Score fades to zero at 300 m from the viewer." />
-          <Toggle on={showHeatmap} onToggle={onToggleHeatmap} />
-          <span style={{ ...S.chevron, transform: heatmapOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
-        </div>
-      </div>
-
-      {heatmapOpen && (
+      {/* ── Parameter chips (Observer + Designer) ── */}
+      {showParams && (
         <>
-          <div style={S.barWrap}>
-            <div style={{ ...S.bar, background: HEATMAP_GRADIENT }} />
-            {BUILDING_TYPES.map((bt) => (
-              <div key={bt.label} style={{ ...S.tick, left: `${bt.score * 100}%` }} />
-            ))}
+          <div style={S.paramRow}>
+            <Chip label="FOV"        value={ep.isDirectional ? `${ep.fovH.toFixed(0)}°` : '360°'} />
+            <Chip label="Range"      value={`${ep.range.toFixed(0)} m`} />
+            <Chip label="Acuity"     value={`${Math.round(ep.numRays / 7.2)}%`} />
+            <Chip label="Peripheral" value={`${ep.peripheralAngle.toFixed(0)}°`} />
+            <Chip label="Light"      value={viewerParams.vision.lightSensitivity.value} />
           </div>
-          <div style={S.typeRow}>
-            <span style={S.edgeLabel}>Low</span>
-            {BUILDING_TYPES.map((bt) => (
-              <div key={bt.label} style={{ ...S.typeItem, left: `${bt.score * 100}%` }}>
-                <span style={{ ...S.typeDot, background: heatmapColor(bt.score) }} />
-                <span style={S.typeLabel}>{bt.label}</span>
-                <span style={S.typeMult}>{bt.mult}</span>
-              </div>
-            ))}
-            <span style={{ ...S.edgeLabel, marginLeft: 'auto' }}>High</span>
-          </div>
+          {showHeatmapSection && <div style={S.divider} />}
         </>
       )}
 
-      <div style={S.divider} />
-
-      {/* ── Public spaces legend ── */}
-      <div style={S.sectionHeader} onClick={() => setSpacesOpen(!spacesOpen)}>
-        <span style={{ ...S.legendLabel, opacity: showSpaces ? 1 : 0.35 }}>PUBLIC SPACES</span>
-        <div style={S.headerRight}>
-          <InfoTip text="Parks, squares and gardens are coloured by proximity to the viewer. Hot pink means close and easy to reach; deep purple means far away. Proximity is normalised over a 300 m radius." />
-          <Toggle on={showSpaces} onToggle={onToggleSpaces} />
-          <span style={{ ...S.chevron, transform: spacesOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
-        </div>
-      </div>
-
-      {spacesOpen && (
+      {/* ── Interaction heatmap legend (Stakeholder + Designer) ── */}
+      {showHeatmapSection && (
         <>
-          <div style={S.barWrap}>
-            <div style={{ ...S.bar, background: SPACES_GRADIENT }} />
-          </div>
-          <div style={S.spaceRow}>
-            <span style={S.edgeLabel}>Far</span>
-            <div style={S.spaceTypes}>
-              {[0.0, 0.35, 0.65, 1.0].map((score, i) => (
-                <div key={i} style={S.spaceItem}>
-                  <span style={{ ...S.typeDot, background: publicSpaceColor(score) }} />
-                </div>
-              ))}
+          <div style={S.sectionHeader} onClick={() => setHeatmapOpen(!heatmapOpen)}>
+            <span style={{ ...S.legendLabel, opacity: showHeatmap ? 1 : 0.35 }}>INTERACTION HEATMAP</span>
+            <div style={S.headerRight}>
+              <InfoTip text="Buildings are scored by use type × proximity. Commercial (×2.5) and office (×2.0) buildings score highest; residential (×1.2) the lowest. Score fades to zero at 300 m from the viewer." />
+              <Toggle on={showHeatmap} onToggle={onToggleHeatmap} />
+              <span style={{ ...S.chevron, transform: heatmapOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
             </div>
-            <span style={{ ...S.edgeLabel, marginLeft: 'auto' }}>Close</span>
           </div>
-          <div style={S.spaceNote}>Parks · Squares · Gardens</div>
+
+          {heatmapOpen && (
+            <>
+              <div style={S.barWrap}>
+                <div style={{ ...S.bar, background: HEATMAP_GRADIENT }} />
+                {BUILDING_TYPES.map((bt) => (
+                  <div key={bt.label} style={{ ...S.tick, left: `${bt.score * 100}%` }} />
+                ))}
+              </div>
+              <div style={S.typeRow}>
+                <span style={S.edgeLabel}>Low</span>
+                {BUILDING_TYPES.map((bt) => (
+                  <div key={bt.label} style={{ ...S.typeItem, left: `${bt.score * 100}%` }}>
+                    <span style={{ ...S.typeDot, background: heatmapColor(bt.score) }} />
+                    <span style={S.typeLabel}>{bt.label}</span>
+                    <span style={S.typeMult}>{bt.mult}</span>
+                  </div>
+                ))}
+                <span style={{ ...S.edgeLabel, marginLeft: 'auto' }}>High</span>
+              </div>
+            </>
+          )}
+
+          {showSpacesSection && <div style={S.divider} />}
+        </>
+      )}
+
+      {/* ── Public spaces legend (Stakeholder + Designer) ── */}
+      {showSpacesSection && (
+        <>
+          <div style={S.sectionHeader} onClick={() => setSpacesOpen(!spacesOpen)}>
+            <span style={{ ...S.legendLabel, opacity: showSpaces ? 1 : 0.35 }}>PUBLIC SPACES</span>
+            <div style={S.headerRight}>
+              <InfoTip text="Parks, squares and gardens are coloured by proximity to the viewer. Hot pink means close and easy to reach; deep purple means far away. Proximity is normalised over a 300 m radius." />
+              <Toggle on={showSpaces} onToggle={onToggleSpaces} />
+              <span style={{ ...S.chevron, transform: spacesOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
+            </div>
+          </div>
+
+          {spacesOpen && (
+            <>
+              <div style={S.barWrap}>
+                <div style={{ ...S.bar, background: SPACES_GRADIENT }} />
+              </div>
+              <div style={S.spaceRow}>
+                <span style={S.edgeLabel}>Far</span>
+                <div style={S.spaceTypes}>
+                  {[0.0, 0.35, 0.65, 1.0].map((score, i) => (
+                    <div key={i} style={S.spaceItem}>
+                      <span style={{ ...S.typeDot, background: publicSpaceColor(score) }} />
+                    </div>
+                  ))}
+                </div>
+                <span style={{ ...S.edgeLabel, marginLeft: 'auto' }}>Close</span>
+              </div>
+              <div style={S.spaceNote}>Parks · Squares · Gardens</div>
+            </>
+          )}
         </>
       )}
     </div>
