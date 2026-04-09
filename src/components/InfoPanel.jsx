@@ -31,8 +31,8 @@ export function InfoPanel({ viewerParams, hasOrigin, showHeatmap, showSpaces, on
 
   // Which sections each role can see
   const showParams  = role === 'designer' || role === 'observer';
-  const showHeatmapSection = role === 'designer' || role === 'stakeholder';
-  const showSpacesSection  = role === 'designer' || role === 'stakeholder';
+  const showHeatmapSection = role === 'designer' || role === 'stakeholder' || role === 'observer';
+  const showSpacesSection  = role === 'designer' || role === 'stakeholder' || role === 'observer';
 
   if (!hasOrigin) {
     return (
