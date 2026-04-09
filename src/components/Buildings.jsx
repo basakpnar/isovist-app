@@ -5,7 +5,8 @@ import { computeBuildingColors, polygonArea, formatArea } from '../heatmap';
 import { describeBuildingFunction, SKIP_CATEGORIES } from '../buildingInfo';
 
 function Building({ coords, height, color, viewMode, info, showFootprint }) {
-  const [hovered, setHovered] = useState(false);
+  const [hovered,      setHovered]      = useState(false);
+  const [areaVisible,  setAreaVisible]  = useState(false);
   const timeoutRef = useRef(null);
 
   const { extrudeGeo, edgesGeo, footprintGeo, flatGeo } = useMemo(() => {
@@ -85,15 +86,24 @@ function Building({ coords, height, color, viewMode, info, showFootprint }) {
       {/* ── Footprint overlay (Stakeholder mode) ── */}
       {showFootprint && flatGeo && (
         <>
-          <mesh geometry={flatGeo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.3, 0]}>
-            <meshBasicMaterial color="#20df80" transparent opacity={0.18} depthWrite={false} />
+          <mesh
+            geometry={flatGeo}
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[0, 0.3, 0]}
+            onClick={(e) => { e.stopPropagation(); setAreaVisible(v => !v); }}
+          >
+            <meshBasicMaterial
+              color="#20df80"
+              transparent
+              opacity={areaVisible ? 0.32 : 0.18}
+              depthWrite={false}
+            />
           </mesh>
-          {/* area label only for buildings large enough to be legible */}
-          {area >= 100 && (
+          {areaVisible && (
             <Html
               position={[centroid[0], 4, -centroid[1]]}
               center
-              zIndexRange={[0, 0]}
+              zIndexRange={[5, 5]}
               style={{ pointerEvents: 'none' }}
             >
               <div style={T.areaLabel}>{formatArea(area)}</div>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import { buildingCentroid, publicSpaceColor, polygonArea, formatArea } from '../heatmap';
@@ -9,6 +9,7 @@ const ACTIVE_OPACITY  = 0.55;
 const MAX_DIST        = 300;
 
 function PublicSpace({ coords, name, origin, showAreas }) {
+  const [areaVisible, setAreaVisible] = useState(false);
   const geometry = useMemo(() => {
     if (coords.length < 3) return null;
     const shape = new THREE.Shape();
@@ -37,11 +38,12 @@ function PublicSpace({ coords, name, origin, showAreas }) {
         geometry={geometry}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0.15, 0]}
+        onClick={showAreas ? (e) => { e.stopPropagation(); setAreaVisible(v => !v); } : undefined}
       >
         <meshBasicMaterial color={color} transparent opacity={opacity} depthWrite={false} />
       </mesh>
 
-      {(name || showAreas) && (
+      {(name || (showAreas && areaVisible)) && (
         <Html
           position={[centroid[0], 12, -centroid[1]]}
           center
@@ -63,7 +65,7 @@ function PublicSpace({ coords, name, origin, showAreas }) {
               {name}
             </div>
           )}
-          {showAreas && (
+          {showAreas && areaVisible && (
             <div style={{
               whiteSpace: 'nowrap',
               color: 'rgba(255,100,200,0.9)',
