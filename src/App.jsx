@@ -5,6 +5,8 @@ import { ControlPanel, getDefaultSettings } from './components/ControlPanel';
 import { ViewerParamsPanel } from './components/ViewerParamsPanel';
 import { ExportPanel, decodeShareHash } from './components/ExportPanel';
 import { InfoPanel } from './components/InfoPanel';
+import { StakeholderPanel } from './components/StakeholderPanel';
+import { DesignerPanel } from './components/DesignerPanel';
 import { RoleSelector, ROLES } from './components/RoleSelector';
 import { DEFAULT_VIEWER_PARAMS } from './viewerParams';
 import './index.css';
@@ -19,9 +21,9 @@ export default function App() {
 
   const roleMeta = ROLES.find(r => r.id === role);
 
-  // Heatmap & spaces are only active for roles that show them
-  const canHeatmap = role === 'designer' || role === 'stakeholder';
-  const canSpaces  = role === 'designer' || role === 'stakeholder';
+  // Observer sees heatmap + spaces; designer/stakeholder have their own bottom panels
+  const canHeatmap = role === 'observer';
+  const canSpaces  = role === 'observer';
   const [showHeatmap, setShowHeatmap]   = useState(true);
   const [showSpaces,  setShowSpaces]    = useState(true);
 
@@ -65,23 +67,27 @@ export default function App() {
         showSpaces={canSpaces && showSpaces}
       />
 
-      {/* Right-side panels — designer sees all; stakeholder sees view controls; observer sees neither */}
+      {/* Right-side panels per role */}
       <div style={styles.panels}>
-        {role === 'designer' && <ViewerParamsPanel params={viewerParams} onChange={setViewerParams} />}
-        {(role === 'designer' || role === 'stakeholder') && <ControlPanel settings={settings} onChange={setSettings} />}
+        {role === 'observer' && <ViewerParamsPanel params={viewerParams} onChange={setViewerParams} />}
+        {role === 'designer' && <ControlPanel settings={settings} onChange={setSettings} />}
       </div>
-
       {role === 'designer' && <ExportPanel settings={settings} viewerParams={viewerParams} glRef={glRef} />}
 
-      <InfoPanel
-        viewerParams={viewerParams}
-        hasOrigin={!!origin}
-        showHeatmap={showHeatmap}
-        showSpaces={showSpaces}
-        onToggleHeatmap={() => setShowHeatmap(v => !v)}
-        onToggleSpaces={() => setShowSpaces(v => !v)}
-        role={role}
-      />
+      {/* Bottom info panel — different per role */}
+      {role === 'observer' && (
+        <InfoPanel
+          viewerParams={viewerParams}
+          hasOrigin={!!origin}
+          showHeatmap={showHeatmap}
+          showSpaces={showSpaces}
+          onToggleHeatmap={() => setShowHeatmap(v => !v)}
+          onToggleSpaces={() => setShowSpaces(v => !v)}
+          role={role}
+        />
+      )}
+      {role === 'stakeholder' && <StakeholderPanel hasOrigin={!!origin} />}
+      {role === 'designer'    && <DesignerPanel    hasOrigin={!!origin} />}
 
       <div style={styles.title}>
         <div style={styles.titleMain}>PROXIVIST</div>
