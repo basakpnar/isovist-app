@@ -21,13 +21,17 @@ export default function App() {
 
   const roleMeta = ROLES.find(r => r.id === role);
 
-  // Observer sees heatmap + spaces; stakeholder sees spaces (for footprint/area layer); designer has own panel
   const canHeatmap = role === 'observer';
   const canSpaces  = role === 'observer' || role === 'stakeholder';
-  const [showHeatmap, setShowHeatmap]             = useState(true);
-  const [showSpaces,  setShowSpaces]              = useState(true);
-  const [showBuildingFootprints, setShowBuildingFootprints] = useState(false);
-  const [showSpaceAreas,         setShowSpaceAreas]         = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showSpaces,  setShowSpaces]  = useState(true);
+
+  // Auto-set footprint view when stakeholder role is selected
+  useEffect(() => {
+    if (role === 'stakeholder') {
+      setSettings(s => ({ ...s, viewMode: 'footprint', ...{ building: '#4a4a6a', ground: '#1e1e2e', sky: '#12121e', road: '#2a2a40' } }));
+    }
+  }, [role]);
 
   // Restore state from a shared link on first load
   useEffect(() => {
@@ -67,14 +71,14 @@ export default function App() {
         onOriginChange={setOrigin}
         showHeatmap={canHeatmap && showHeatmap}
         showSpaces={canSpaces && showSpaces}
-        showBuildingFootprints={role === 'stakeholder' && showBuildingFootprints}
-        showSpaceAreas={role === 'stakeholder' && showSpaceAreas}
+        role={role}
       />
 
       {/* Right-side panels per role */}
       <div style={styles.panels}>
-        {role === 'observer' && <ViewerParamsPanel params={viewerParams} onChange={setViewerParams} />}
-        {role === 'designer' && <ControlPanel settings={settings} onChange={setSettings} />}
+        {role === 'observer'     && <ViewerParamsPanel params={viewerParams} onChange={setViewerParams} />}
+        {role === 'stakeholder'  && <ControlPanel settings={settings} onChange={setSettings} role="stakeholder" />}
+        {role === 'designer'     && <ControlPanel settings={settings} onChange={setSettings} />}
       </div>
       {role === 'designer' && <ExportPanel settings={settings} viewerParams={viewerParams} glRef={glRef} />}
 
@@ -90,15 +94,7 @@ export default function App() {
           role={role}
         />
       )}
-      {role === 'stakeholder' && (
-        <StakeholderPanel
-          hasOrigin={!!origin}
-          showBuildingFootprints={showBuildingFootprints}
-          showSpaceAreas={showSpaceAreas}
-          onToggleBuildingFootprints={() => setShowBuildingFootprints(v => !v)}
-          onToggleSpaceAreas={() => setShowSpaceAreas(v => !v)}
-        />
-      )}
+      {role === 'stakeholder' && <StakeholderPanel hasOrigin={!!origin} />}
       {role === 'designer'    && <DesignerPanel    hasOrigin={!!origin} />}
 
       <div style={styles.title}>

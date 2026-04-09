@@ -4,10 +4,10 @@ import { Html } from '@react-three/drei';
 import { computeBuildingColors, polygonArea, formatArea } from '../heatmap';
 import { describeBuildingFunction, SKIP_CATEGORIES } from '../buildingInfo';
 
-function Building({ coords, height, color, viewMode, info, showFootprint }) {
-  const [hovered,      setHovered]      = useState(false);
-  const [areaVisible,  setAreaVisible]  = useState(false);
+function Building({ coords, height, color, viewMode, info, role }) {
+  const [hovered,     setHovered]     = useState(false);
   const timeoutRef = useRef(null);
+  const stakeholder = role === 'stakeholder';
 
   const { extrudeGeo, edgesGeo, footprintGeo, flatGeo } = useMemo(() => {
     if (coords.length < 3) return {};
@@ -48,9 +48,10 @@ function Building({ coords, height, color, viewMode, info, showFootprint }) {
 
   if (!extrudeGeo) return null;
 
-  const rotation  = [-Math.PI / 2, 0, 0];
+  const rotation = [-Math.PI / 2, 0, 0];
   const fn       = describeBuildingFunction(info);
-  const canHover = !SKIP_CATEGORIES.has(fn.category);
+  // Stakeholder: all buildings hoverable; others: skip residential/utility
+  const canHover = stakeholder || !SKIP_CATEGORIES.has(fn.category);
 
   return (
     <group>
@@ -83,35 +84,6 @@ function Building({ coords, height, color, viewMode, info, showFootprint }) {
         </mesh>
       )}
 
-      {/* ── Footprint overlay (Stakeholder mode) ── */}
-      {showFootprint && flatGeo && (
-        <>
-          <mesh
-            geometry={flatGeo}
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[0, 0.3, 0]}
-            onClick={(e) => { e.stopPropagation(); setAreaVisible(v => !v); }}
-          >
-            <meshBasicMaterial
-              color="#20df80"
-              transparent
-              opacity={areaVisible ? 0.32 : 0.18}
-              depthWrite={false}
-            />
-          </mesh>
-          {areaVisible && (
-            <Html
-              position={[centroid[0], 4, -centroid[1]]}
-              center
-              zIndexRange={[5, 5]}
-              style={{ pointerEvents: 'none' }}
-            >
-              <div style={T.areaLabel}>{formatArea(area)}</div>
-            </Html>
-          )}
-        </>
-      )}
-
       {/* ── Tooltip ── */}
       {hovered && canHover && (
         <Html
@@ -134,7 +106,11 @@ function Building({ coords, height, color, viewMode, info, showFootprint }) {
             </div>
             {info?.name && <div style={T.name}>{info.name}</div>}
             {fn.detail && <div style={T.detail}>{fn.detail}</div>}
-            {info?.levels && (
+            {/* Area shown in stakeholder footprint view */}
+            {stakeholder && viewMode === 'footprint' && (
+              <div style={T.area}>{formatArea(area)}</div>
+            )}
+            {!stakeholder && info?.levels && (
               <div style={T.meta}>
                 {info.levels} {Number(info.levels) === 1 ? 'floor' : 'floors'}
               </div>
@@ -146,7 +122,7 @@ function Building({ coords, height, color, viewMode, info, showFootprint }) {
   );
 }
 
-export function Buildings({ buildings, color = '#e8e0d0', viewMode = 'shaded', origin = null, showFootprint = false }) {
+export function Buildings({ buildings, color = '#e8e0d0', viewMode = 'shaded', origin = null, role }) {
   const heatColors = useMemo(
     () => origin ? computeBuildingColors(buildings, origin) : null,
     [buildings, origin]
@@ -162,7 +138,7 @@ export function Buildings({ buildings, color = '#e8e0d0', viewMode = 'shaded', o
           color={heatColors ? heatColors[i] : color}
           viewMode={viewMode}
           info={b.info}
-          showFootprint={showFootprint}
+          role={role}
         />
       ))}
     </group>
@@ -215,13 +191,13 @@ const T = {
     borderTop: '1px solid rgba(255,255,255,0.05)',
     paddingTop: 3,
   },
-  areaLabel: {
-    fontSize: 9,
-    color: 'rgba(32,223,128,0.85)',
-    fontFamily: 'system-ui, sans-serif',
+  area: {
+    fontSize: 10,
+    color: 'rgba(32,223,128,0.8)',
     fontWeight: 600,
-    letterSpacing: '0.04em',
-    textShadow: '0 0 6px rgba(0,0,0,0.9)',
-    whiteSpace: 'nowrap',
+    marginTop: 4,
+    borderTop: '1px solid rgba(255,255,255,0.05)',
+    paddingTop: 4,
+    fontVariantNumeric: 'tabular-nums',
   },
 };

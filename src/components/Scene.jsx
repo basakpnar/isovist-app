@@ -76,7 +76,7 @@ function Lighting({ viewMode }) {
   );
 }
 
-export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, glRef, onOriginChange, showHeatmap = true, showSpaces = true, showBuildingFootprints = false, showSpaceAreas = false }) {
+export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, glRef, onOriginChange, showHeatmap = true, showSpaces = true, role }) {
   const { viewMode, building: buildingColor, ground: groundColor, sky: skyColor, road: roadColor } = settings;
 
   const [isovistState, setIsovistState] = useState(null);
@@ -131,8 +131,8 @@ export function Scene({ buildings, roads, publicSpaces, settings, viewerParams, 
       <Lighting viewMode={viewMode} />
 
       <Ground color={groundColor} viewMode={viewMode} onGroundClick={handleGroundClick} />
-      {showSpaces  && <PublicSpaces publicSpaces={publicSpaces} origin={origin} showAreas={showSpaceAreas} />}
-      <Buildings buildings={buildings} color={buildingColor} viewMode={viewMode} origin={showHeatmap ? origin : null} showFootprint={showBuildingFootprints} />
+      {showSpaces && <PublicSpaces publicSpaces={publicSpaces} origin={origin} role={role} viewMode={viewMode} />}
+      <Buildings buildings={buildings} color={buildingColor} viewMode={viewMode} origin={showHeatmap ? origin : null} role={role} />
       <Roads roads={roads} color={roadColor} viewMode={viewMode} />
 
       {isovistState && origin && (

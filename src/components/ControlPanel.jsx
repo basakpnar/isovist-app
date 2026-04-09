@@ -15,7 +15,7 @@ const PRESETS = {
   },
 };
 
-export function ControlPanel({ settings, onChange }) {
+export function ControlPanel({ settings, onChange, role }) {
   const [collapsed, setCollapsed] = useState(false);
 
   function setMode(viewMode) {
@@ -45,11 +45,10 @@ export function ControlPanel({ settings, onChange }) {
           {/* View Mode */}
           <Section label="View Mode">
             <ToggleGroup
-              options={[
-                { value: 'shaded',    label: 'Shaded'     },
-                { value: 'blueprint', label: 'Blueprint'  },
-                { value: 'footprint', label: 'Footprint'  },
-              ]}
+              options={role === 'stakeholder'
+                ? [{ value: 'footprint', label: 'Footprint' }, { value: 'shaded', label: 'Shaded' }]
+                : [{ value: 'shaded', label: 'Shaded' }, { value: 'blueprint', label: 'Blueprint' }, { value: 'footprint', label: 'Footprint' }]
+              }
               value={settings.viewMode}
               onChange={setMode}
             />
