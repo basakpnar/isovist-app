@@ -64,6 +64,27 @@ export function publicSpaceColor(score) {
 }
 
 /**
+ * Area of a polygon in m² using the Shoelace formula.
+ * coords = [[x, z], ...] in scene metres (geoToScene space).
+ */
+export function polygonArea(coords) {
+  let area = 0;
+  const n = coords.length;
+  for (let i = 0; i < n; i++) {
+    const [x1, z1] = coords[i];
+    const [x2, z2] = coords[(i + 1) % n];
+    area += x1 * z2 - x2 * z1;
+  }
+  return Math.abs(area / 2);
+}
+
+/** Format an area value: m² below 10 000, ha above. */
+export function formatArea(m2) {
+  if (m2 >= 10000) return `${(m2 / 10000).toFixed(2)} ha`;
+  return `${Math.round(m2)} m²`;
+}
+
+/**
  * Compute a heatmap colour for every building in the array.
  * @param {Array}           buildings  - each has .coords and .interactionMultiplier
  * @param {[number,number]} origin     - [x, z] isovist origin in geoToScene space

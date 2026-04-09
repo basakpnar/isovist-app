@@ -1,25 +1,28 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
-import { computeBuildingColors } from '../heatmap';
+import { computeBuildingColors, polygonArea, formatArea } from '../heatmap';
 import { describeBuildingFunction, SKIP_CATEGORIES } from '../buildingInfo';
 
-function Building({ coords, height, color, viewMode, info }) {
+function Building({ coords, height, color, viewMode, info, showFootprint }) {
   const [hovered, setHovered] = useState(false);
   const timeoutRef = useRef(null);
 
-  const { extrudeGeo, edgesGeo, footprintGeo } = useMemo(() => {
+  const { extrudeGeo, edgesGeo, footprintGeo, flatGeo } = useMemo(() => {
     if (coords.length < 3) return {};
     const shape = new THREE.Shape();
     shape.moveTo(coords[0][0], coords[0][1]);
     for (let i = 1; i < coords.length; i++) shape.lineTo(coords[i][0], coords[i][1]);
     shape.closePath();
 
-    const extrudeGeo  = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: height, bevelEnabled: false });
-    const edgesGeo    = new THREE.EdgesGeometry(extrudeGeo);
+    const extrudeGeo   = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: height, bevelEnabled: false });
+    const edgesGeo     = new THREE.EdgesGeometry(extrudeGeo);
     const footprintGeo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: 0.5, bevelEnabled: false });
-    return { extrudeGeo, edgesGeo, footprintGeo };
+    const flatGeo      = new THREE.ShapeGeometry(shape);
+    return { extrudeGeo, edgesGeo, footprintGeo, flatGeo };
   }, [coords, height]);
+
+  const area = useMemo(() => polygonArea(coords), [coords]);
 
   const centroid = useMemo(() => {
     let sx = 0, sz = 0;
@@ -79,6 +82,26 @@ function Building({ coords, height, color, viewMode, info }) {
         </mesh>
       )}
 
+      {/* ── Footprint overlay (Stakeholder mode) ── */}
+      {showFootprint && flatGeo && (
+        <>
+          <mesh geometry={flatGeo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.3, 0]}>
+            <meshBasicMaterial color="#20df80" transparent opacity={0.18} depthWrite={false} />
+          </mesh>
+          {/* area label only for buildings large enough to be legible */}
+          {area >= 100 && (
+            <Html
+              position={[centroid[0], 4, -centroid[1]]}
+              center
+              zIndexRange={[0, 0]}
+              style={{ pointerEvents: 'none' }}
+            >
+              <div style={T.areaLabel}>{formatArea(area)}</div>
+            </Html>
+          )}
+        </>
+      )}
+
       {/* ── Tooltip ── */}
       {hovered && canHover && (
         <Html
@@ -113,7 +136,7 @@ function Building({ coords, height, color, viewMode, info }) {
   );
 }
 
-export function Buildings({ buildings, color = '#e8e0d0', viewMode = 'shaded', origin = null }) {
+export function Buildings({ buildings, color = '#e8e0d0', viewMode = 'shaded', origin = null, showFootprint = false }) {
   const heatColors = useMemo(
     () => origin ? computeBuildingColors(buildings, origin) : null,
     [buildings, origin]
@@ -129,6 +152,7 @@ export function Buildings({ buildings, color = '#e8e0d0', viewMode = 'shaded', o
           color={heatColors ? heatColors[i] : color}
           viewMode={viewMode}
           info={b.info}
+          showFootprint={showFootprint}
         />
       ))}
     </group>
@@ -180,5 +204,14 @@ const T = {
     marginTop: 3,
     borderTop: '1px solid rgba(255,255,255,0.05)',
     paddingTop: 3,
+  },
+  areaLabel: {
+    fontSize: 9,
+    color: 'rgba(32,223,128,0.85)',
+    fontFamily: 'system-ui, sans-serif',
+    fontWeight: 600,
+    letterSpacing: '0.04em',
+    textShadow: '0 0 6px rgba(0,0,0,0.9)',
+    whiteSpace: 'nowrap',
   },
 };

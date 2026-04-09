@@ -23,13 +23,34 @@ const QUALITY_FACTORS = [
   { label: 'Noise exposure',  desc: 'Road & industrial noise' },
 ];
 
-export function StakeholderPanel({ hasOrigin }) {
+export function StakeholderPanel({ hasOrigin, showBuildingFootprints, showSpaceAreas, onToggleBuildingFootprints, onToggleSpaceAreas }) {
   const [timelineOpen, setTimelineOpen] = useState(true);
   const [qualityOpen,  setQualityOpen]  = useState(true);
+
+  // Layer toggles row — shown always (even before origin is set)
+  const layerToggles = (
+    <div style={S.layerRow}>
+      <span style={S.layerRowLabel}>LAYERS</span>
+      <LayerToggle
+        label="Building Footprints"
+        on={showBuildingFootprints}
+        onToggle={onToggleBuildingFootprints}
+        accent={ACCENT}
+      />
+      <LayerToggle
+        label="Space Areas"
+        on={showSpaceAreas}
+        onToggle={onToggleSpaceAreas}
+        accent="#ff5ab8"
+      />
+    </div>
+  );
 
   if (!hasOrigin) {
     return (
       <div style={S.panel}>
+        {layerToggles}
+        <div style={S.divider} />
         <span style={S.hint}>Click on the ground to select a project location</span>
         <span style={S.sub}>Cost and timeline estimates will appear here</span>
       </div>
@@ -38,6 +59,9 @@ export function StakeholderPanel({ hasOrigin }) {
 
   return (
     <div style={S.panel}>
+      {layerToggles}
+
+      <div style={S.divider} />
 
       {/* ── Location activity score ── */}
       <div style={S.sectionLabel}>LOCATION ACTIVITY SCORE</div>
@@ -103,6 +127,17 @@ export function StakeholderPanel({ hasOrigin }) {
         </div>
       )}
 
+    </div>
+  );
+}
+
+function LayerToggle({ label, on, onToggle, accent }) {
+  return (
+    <div style={S.layerToggle} onClick={onToggle}>
+      <div style={{ ...S.toggleTrack, background: on ? accent + '44' : 'rgba(255,255,255,0.06)' }}>
+        <div style={{ ...S.toggleThumb, transform: on ? 'translateX(12px)' : 'translateX(1px)' }} />
+      </div>
+      <span style={{ ...S.layerToggleLabel, color: on ? accent : '#556' }}>{label}</span>
     </div>
   );
 }
@@ -307,5 +342,49 @@ const S = {
     fontSize: 10,
     color: '#445',
     fontStyle: 'italic',
+  },
+  layerRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  layerRowLabel: {
+    fontSize: 8,
+    letterSpacing: '0.14em',
+    color: '#445',
+    textTransform: 'uppercase',
+    marginRight: 4,
+  },
+  layerToggle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    cursor: 'pointer',
+    userSelect: 'none',
+  },
+  toggleTrack: {
+    width: 26,
+    height: 14,
+    borderRadius: 7,
+    border: '1px solid rgba(255,255,255,0.1)',
+    cursor: 'pointer',
+    flexShrink: 0,
+    position: 'relative',
+    transition: 'background 0.2s',
+  },
+  toggleThumb: {
+    position: 'absolute',
+    top: 1,
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    background: '#fff',
+    transition: 'transform 0.2s',
+  },
+  layerToggleLabel: {
+    fontSize: 10,
+    letterSpacing: '0.04em',
+    transition: 'color 0.2s',
   },
 };

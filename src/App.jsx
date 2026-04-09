@@ -21,11 +21,13 @@ export default function App() {
 
   const roleMeta = ROLES.find(r => r.id === role);
 
-  // Observer sees heatmap + spaces; designer/stakeholder have their own bottom panels
+  // Observer sees heatmap + spaces; stakeholder sees spaces (for footprint/area layer); designer has own panel
   const canHeatmap = role === 'observer';
-  const canSpaces  = role === 'observer';
-  const [showHeatmap, setShowHeatmap]   = useState(true);
-  const [showSpaces,  setShowSpaces]    = useState(true);
+  const canSpaces  = role === 'observer' || role === 'stakeholder';
+  const [showHeatmap, setShowHeatmap]             = useState(true);
+  const [showSpaces,  setShowSpaces]              = useState(true);
+  const [showBuildingFootprints, setShowBuildingFootprints] = useState(false);
+  const [showSpaceAreas,         setShowSpaceAreas]         = useState(false);
 
   // Restore state from a shared link on first load
   useEffect(() => {
@@ -65,6 +67,8 @@ export default function App() {
         onOriginChange={setOrigin}
         showHeatmap={canHeatmap && showHeatmap}
         showSpaces={canSpaces && showSpaces}
+        showBuildingFootprints={role === 'stakeholder' && showBuildingFootprints}
+        showSpaceAreas={role === 'stakeholder' && showSpaceAreas}
       />
 
       {/* Right-side panels per role */}
@@ -86,7 +90,15 @@ export default function App() {
           role={role}
         />
       )}
-      {role === 'stakeholder' && <StakeholderPanel hasOrigin={!!origin} />}
+      {role === 'stakeholder' && (
+        <StakeholderPanel
+          hasOrigin={!!origin}
+          showBuildingFootprints={showBuildingFootprints}
+          showSpaceAreas={showSpaceAreas}
+          onToggleBuildingFootprints={() => setShowBuildingFootprints(v => !v)}
+          onToggleSpaceAreas={() => setShowSpaceAreas(v => !v)}
+        />
+      )}
       {role === 'designer'    && <DesignerPanel    hasOrigin={!!origin} />}
 
       <div style={styles.title}>

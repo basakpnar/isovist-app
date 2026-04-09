@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
-import { buildingCentroid, publicSpaceColor } from '../heatmap';
+import { buildingCentroid, publicSpaceColor, polygonArea, formatArea } from '../heatmap';
 
 const NEUTRAL_COLOR  = '#4c1d95';   // muted indigo before an origin is set
 const NEUTRAL_OPACITY = 0.25;
 const ACTIVE_OPACITY  = 0.55;
 const MAX_DIST        = 300;
 
-function PublicSpace({ coords, name, origin }) {
+function PublicSpace({ coords, name, origin, showAreas }) {
   const geometry = useMemo(() => {
     if (coords.length < 3) return null;
     const shape = new THREE.Shape();
@@ -27,6 +27,7 @@ function PublicSpace({ coords, name, origin }) {
   }, [coords, origin]);
 
   const centroid = useMemo(() => buildingCentroid(coords), [coords]);
+  const area     = useMemo(() => polygonArea(coords), [coords]);
 
   if (!geometry) return null;
 
@@ -40,32 +41,49 @@ function PublicSpace({ coords, name, origin }) {
         <meshBasicMaterial color={color} transparent opacity={opacity} depthWrite={false} />
       </mesh>
 
-      {name && (
+      {(name || showAreas) && (
         <Html
           position={[centroid[0], 12, -centroid[1]]}
           center
           zIndexRange={[0, 0]}
-          style={{
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-            color: '#fff',
-            fontSize: 10,
-            fontFamily: 'system-ui, sans-serif',
-            fontWeight: 600,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            textShadow: '0 0 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)',
-            opacity: origin ? 1 : 0.5,
-          }}
+          style={{ pointerEvents: 'none', textAlign: 'center' }}
         >
-          {name}
+          {name && (
+            <div style={{
+              whiteSpace: 'nowrap',
+              color: '#fff',
+              fontSize: 10,
+              fontFamily: 'system-ui, sans-serif',
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              textShadow: '0 0 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)',
+              opacity: origin ? 1 : 0.5,
+            }}>
+              {name}
+            </div>
+          )}
+          {showAreas && (
+            <div style={{
+              whiteSpace: 'nowrap',
+              color: 'rgba(255,100,200,0.9)',
+              fontSize: 9,
+              fontFamily: 'system-ui, sans-serif',
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+              textShadow: '0 0 6px rgba(0,0,0,0.9)',
+              marginTop: name ? 2 : 0,
+            }}>
+              {formatArea(area)}
+            </div>
+          )}
         </Html>
       )}
     </group>
   );
 }
 
-export function PublicSpaces({ publicSpaces = [], origin }) {
+export function PublicSpaces({ publicSpaces = [], origin, showAreas = false }) {
   return (
     <group>
       {publicSpaces.map((ps) => (
@@ -74,6 +92,7 @@ export function PublicSpaces({ publicSpaces = [], origin }) {
           coords={ps.coords}
           name={ps.name}
           origin={origin}
+          showAreas={showAreas}
         />
       ))}
     </group>
