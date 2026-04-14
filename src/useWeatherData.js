@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 
-const API_URL =
+const FORECAST_URL =
   'https://api.open-meteo.com/v1/forecast' +
   '?latitude=50.975&longitude=11.325' +
   '&daily=precipitation_hours' +
   '&hourly=temperature_2m,wind_speed_10m,shortwave_radiation' +
   '&timezone=Europe%2FBerlin';
+
+const ELEVATION_URL =
+  'https://api.open-meteo.com/v1/elevation' +
+  '?latitude=50.975&longitude=11.325';
 
 function avg(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -17,10 +21,13 @@ export function useWeatherData() {
   const [error,   setError]   = useState(null);
 
   useEffect(() => {
-    fetch(API_URL)
-      .then(r => r.json())
-      .then(json => {
-        const { hourly, daily, elevation } = json;
+    Promise.all([
+      fetch(FORECAST_URL).then(r => r.json()),
+      fetch(ELEVATION_URL).then(r => r.json()),
+    ])
+      .then(([json, elevJson]) => {
+        const { hourly, daily } = json;
+        const elevation = elevJson.elevation[0];
 
         // Solar: sum all hourly W/m² values → Wh/m² total → kWh/m²/day average
         const totalWh   = hourly.shortwave_radiation.reduce((a, b) => a + b, 0);
@@ -31,7 +38,7 @@ export function useWeatherData() {
         const precipPerDay = avg(daily.precipitation_hours);
 
         setWeather({
-          elevation:      Math.round(elevation),
+          elevation:      Math.round(elevation ?? 0),
           tempAvg:        avg(hourly.temperature_2m).toFixed(1),
           tempMin:        Math.min(...hourly.temperature_2m).toFixed(1),
           tempMax:        Math.max(...hourly.temperature_2m).toFixed(1),

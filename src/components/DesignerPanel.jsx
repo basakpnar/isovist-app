@@ -148,7 +148,7 @@ export function DesignerPanel({ hasOrigin }) {
       label: 'Elevation',
       value: weather ? `${weather.elevation}` : '…',
       unit: 'm a.s.l.',
-      note: weather ? 'Open-Meteo DEM' : 'loading…',
+      note: weather ? 'Open-Meteo Elevation API' : 'loading…',
       live: true,
     },
     { label: 'Parcel Area',  value: '—', unit: 'm²', note: 'Cadastre · pending', live: false },
